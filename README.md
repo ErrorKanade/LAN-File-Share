@@ -2,7 +2,8 @@
 
 这是一个基于 Python Flask 开发的轻量级、高质感的局域网文件共享工具。无需任何复杂的配置，只需在主电脑上运行即可将设备化身为局域网内的“私有云盘”，让手机、平板、以及其他电脑通过浏览器跨平台进行文件的上传与下载。
 
-本设计源于对CSDN中Python Flask - 实现本地文件的上传与下载https://blog.csdn.net/TomorrowAndTuture/article/details/118495072，的学习并根据自身实际情况设计的内容。
+本设计源于对CSDN中Python Flask - 实现本地文件的上传与下载https://blog.csdn.net/TomorrowAndTuture/article/details/118495072 ，
+的学习并根据自身实际情况设计的内容。
 <img width="1920" height="1016" alt="image" src="https://github.com/user-attachments/assets/d68dbf34-0a43-44e8-afa5-6f6493d4cad1" />
 
 ## ✨ 核心功能特性
