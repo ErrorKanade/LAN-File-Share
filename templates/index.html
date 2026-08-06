@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>局域網檔案共享中心</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 32px 16px;
+        }
+
+        header {
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        h1 {
+            color: #2563eb;
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+        }
+
+        @media (min-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr 2fr;
+            }
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .sticky-card {
+            position: sticky;
+            top: 24px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #334155;
+        }
+
+        /* 上傳區域樣式 */
+        .upload-zone {
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 24px 16px;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        /* 拖曳進入時的視覺回饋 */
+        .upload-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            margin: 0 0 4px 0;
+        }
+
+        .upload-tip {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 0;
+        }
+
+        /* 實時進度條樣式 */
+        .progress-container {
+            display: none;
+            margin-top: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #475569;
+        }
+
+        .progress-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 75%;
+        }
+
+        .progress-track {
+            background-color: #e2e8f0;
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: #2563eb;
+            height: 100%;
+            width: 0%;
+            transition: width 0.2s ease-out, background-color 0.3s ease;
+        }
+
+        /* 檔案列表樣式 */
+        .file-box {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .file-box-header {
+            background-color: #f8fafc;
+            padding: 12px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-box-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .badge {
+            font-size: 12px;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .file-item {
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-name {
+            font-size: 14px;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 65%;
+        }
+
+        .btn-download {
+            font-size: 12px;
+            font-weight: 500;
+            color: #2563eb;
+            background-color: #eff6ff;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-download:hover {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .empty-text {
+            padding: 24px;
+            text-align: center;
+            font-size: 14px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .all-empty {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 48px;
+            text-align: center;
+            border: 2px dashed #e2e8f0;
+        }
+
+        /* IP 提示列與按鈕樣式 */
+        .ip-banner {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ip-text {
+            font-size: 14px;
+            color: #1e40af;
+            margin: 0;
+        }
+
+        .ip-url {
+            font-weight: 700;
+            color: #2563eb;
+            background: #ffffff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid #dbeafe;
+            margin-left: 4px;
+        }
+
+        .btn-refresh {
+            background-color: #2563eb;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-refresh:hover {
+            background-color: #1d4ed8;
+        }
+
+        .actions-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-delete {
+            font-size: 12px;
+            font-weight: 500;
+            color: #dc2626;
+            background-color: #fef2f2;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-delete:hover {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🚀 檔案共享中心</h1>
+        </header>
+
+        <div class="ip-banner">
+            <p class="ip-text">
+                📢 <strong>區域網連線提示：</strong>請讓其他電腦連線至網址：
+                <span class="ip-url">{{ lan_url }}</span>
+            </p>
+            <button onclick="window.location.reload();" class="btn-refresh">
+                🔄 重新整理列表
+            </button>
+        </div>
+
+        <div class="main-layout">
+            <div>
+                <div class="card sticky-card">
+                    <h2>📤 上傳新檔案</h2>
+
+                    <div class="upload-zone" id="dropzone">
+                        <input type="file" name="file" id="fileInput">
+                        <div id="uploadPrompt">
+                            <span class="icon">📄</span>
+                            <p class="upload-text">點擊或拖曳檔案至此</p>
+                            <p class="upload-tip">支援任何格式檔案自動分類，無限大小</p>
+                        </div>
+                    </div>
+
+                    <div id="progressContainer" class="progress-container">
+                        <div class="progress-header">
+                            <span id="progressName" class="progress-name">準備上傳...</span>
+                            <span id="progressText" style="color: #2563eb;">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div id="progressBar" class="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h2 style="margin-bottom: 24px;">📂 儲存庫檔案列表</h2>
+
+                {% if file_structure %}
+                {% for category, files in file_structure.items() %}
+                <div class="file-box">
+                    <div class="file-box-header">
+                        <h3 class="file-box-title">{{ category }}</h3>
+                        <span class="badge">{{ files|length }} 個檔案</span>
+                    </div>
+
+                    <ul class="file-list">
+                        {% if files %}
+                        {% for file in files %}
+                        <li class="file-item">
+                            <span class="file-name" title="{{ file }}">{{ file }}</span>
+                            <div class="actions-group">
+                                <a href="/download/{{ category }}/{{ file }}" class="btn-download">⬇️ 下載</a>
+                                <form action="/delete/{{ category }}/{{ file }}" method="POST"
+                                    onsubmit="return confirm('⚠️ 確定要永久刪除這個檔案嗎？');" style="margin: 0; display: inline;">
+                                    <button type="submit" class="btn-delete">🗑️ 刪除</button>
+                                </form>
+                            </div>
+                        </li>
+                        {% endfor %}
+                        {% else %}
+                        <li class="empty-text">此分類暫無檔案</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="all-empty">
+                    <span style="font-size: 48px; display: block; margin-bottom: 16px;">📭</span>
+                    <p style="color: #64748b; margin: 0;">目前沒有任何檔案，快從左側拖曳上傳一個吧！</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressName = document.getElementById('progressName');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+        });
+
+        dropzone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', function () {
+            if (this.files.length > 0) uploadFile(this.files[0]);
+        });
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) uploadFile(files[0]);
+        }
+
+        function uploadFile(file) {
+            uploadPrompt.style.display = 'none';
+            progressContainer.style.display = 'block';
+
+            progressName.innerText = file.name;
+            progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = '#2563eb';
+            progressText.innerText = '0%';
+            progressText.style.color = '#2563eb';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.innerText = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200 || xhr.status === 302) {
+                    progressText.innerText = '完成！';
+                    progressText.style.color = '#10b981';
+                    progressBar.style.backgroundColor = '#10b981';
+
+                    setTimeout(() => window.location.reload(), 600);
+                } else {
+                    progressText.innerText = '上傳失敗';
+                    progressText.style.color = '#dc2626';
+                    progressBar.style.backgroundColor = '#dc2626';
+                }
+            };
+
+            xhr.onerror = function () {
+                progressText.innerText = '網路錯誤';
+                progressText.style.color = '#dc2626';
+                progressBar.style.backgroundColor = '#dc2626';
+            };
+
+            xhr.send(formData);
+        }
+    </script>
+</body>
+
+</html>
